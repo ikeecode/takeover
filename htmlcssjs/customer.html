@@ -1,0 +1,94 @@
+<!-- templates/customer_chat.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Chat</title>
+    <style>
+        /* Simple styles for the chat app */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #chat-box {
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+            height: 400px;
+            overflow-y: scroll;
+        }
+
+        #chat-box div {
+            margin-bottom: 10px;
+        }
+
+        #chat-box .ai {
+            color: blue;
+        }
+
+        #chat-box .customer {
+            color: green;
+        }
+
+        #message {
+            width: calc(100% - 80px);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chat-box"></div>
+    <input type="text" id="message" placeholder="Type your message here">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const user = "intelli";  // Replace with dynamic user identifier
+        const chatBox = document.getElementById('chat-box');
+        const API_ENDPOINT = 'http://127.0.0.1:8000/'
+
+
+        function fetchMessages() {
+            fetch(API_ENDPOINT + `/chat/messages/${user}/`)
+                .then(response => response.json())
+                .then(data => {
+                    chatBox.innerHTML = '';
+                    data.messages.forEach(msg => {
+                        const newMessage = document.createElement('div');
+                        newMessage.className = msg.sender.toLowerCase();
+                        newMessage.innerText = `${msg.sender}: ${msg.content}`;
+                        chatBox.appendChild(newMessage);
+                    });
+                });
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value;
+
+            fetch(API_ENDPOINT + '/chat/send_message/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user, content: message, sender: 'customer' })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const newMessage = document.createElement('div');
+                    newMessage.className = data.sender.toLowerCase();
+                    newMessage.innerText = `${data.sender}: ${data.content}`;
+                    chatBox.appendChild(newMessage);
+                    messageInput.value = '';
+                });
+        }
+
+        // Initial fetch of messages
+        fetchMessages();
+        setInterval(fetchMessages, 5000);  // Poll for new messages every 5 seconds
+    </script>
+</body>
+
+</html>
